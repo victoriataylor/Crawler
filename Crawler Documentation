@@ -1,0 +1,184 @@
+
+
+***Crawler Design Spec***
+-------------------------
+
+(1) *Input*
+ 
+Command Input
+./crawler [SEED URL] [TARGET DIRECTORY TO DEPOSIT DATA] [CRAWLING DEPTH]
+
+Example command input
+./crawler http://old-www.cs.dartmouth.edu/~cs50/tse ./crawledFiles 3
+
+[SEED URL] http://old-www.cs.dartmouth.edu/~cs50/tse
+Requirement: URL must be valid and under the above domain.
+Usage: The crawler informs the user if URL is not found
+
+[TARGET DIRECTORY] ./crawledFiles
+Requirement: The directory must exist and have write permissions.
+Usage: If the directory cannot be found or written to, crawler informs the user and then terminates.
+
+[CRAWLING DEPTH] 3
+Requirement: The crawling depth cannot exceed 4.
+Usage: The crawler informs the user and quits if the input is not a valid integer. If the input exceeds 4, the crawler will set the crawling depth to 4 and continue.
+
+(2) *Output*
+--------------------
+ For each webpage crawled, the crawler program will create a file in the [TARGET DIRECTORY]. The name of the file will start with 1 for the [SEED URL] and be incremented for each subsequent HTML webpage crawled.
+
+ Each of these files will include the URL associated with its webpage as the first line of the file, the depth at whcih that webpage was reached on the second line, and the HTML for the webpage starting on the third line. 
+ 
+(3) *Data Flow*
+-------------------
+
+The seed web page contents (HTML) are read and stored in a new webPage data structure. 
+
+The HTML is then parsed for URLs. Each URL found on the page is checked to see whether it is already in a hashTable of URL's we've seen AND whether visiting that URL would exceed our depth limit. If not, the URL is saved on a separate list of URL's-- the URLList--we still need to visit.  
+
+After each webpage is scanned for URLs, its URL, depth, and HTML contents are stored in a local file. The webpage is added to the hashTable to indicate we've visited it.
+
+Once a webpage is copied to a file and all its new URLs are saved on the URLList, 
+a URL is taken off the list, fetched from the Internet, stored in a file, and 
+parsed for additional URLs, which are added to the URLList if they're not already there. 
+
+This process continues as long as there are URL's on the URLList.
+
+(5) *PseudoCode*
+--------------------
+1. Check commandline arguments
+	
+	inform the user if arguments are not present or invalid
+	
+	IF target_directory does not exist OR depth exceeds maxDepth THEn
+		Inform user of usage and exit failed
+
+2. Init curl
+
+3. Initialize data structures/variables
+
+4. Set up seed page
+
+5. Retrieve seed webpage
+	If this fails, report and exit
+
+6. Write seed file
+
+7. Add seed page to hashtable
+
+8. Extract urls from seed page and add to URLList, only if visiting these URLs would not exceed maxDepth and if they are not already in the URLList.
+
+9. While there are still URLs to crawl...
+	Get next URL from List
+	
+	Get webpage for URL
+	
+	Write page file
+	
+	Extract URLS from webpage and add to URLList, making sure to add only the new ones, and only if visiting them wouldn't exceed maxDepth. 
+
+	Sleep to avoid annoying target domain
+
+10. Cleanup curl
+
+11. Free resources
+
+
+*** Indexer Implementation Spec**
+---------------------------------------
+(1) *Data Structures and Variables*
+
+typedef struct WebPage {
+    char *url;                          // url of the page
+    char *html;                         // html code of the page
+    size_t html_len;                    // length of html code
+    int depth;                          // depth of crawl
+} WebPage;
+
+
+/* List data structure */
+
+typedef struct ListNode {
+    WebPage *page;                      // the data for a given page
+    struct ListNode *prev;              // pointer to previous node
+    struct ListNode *next;              // pointer to next node
+} ListNode;
+
+typedef struct List {
+    ListNode *head;                     // "beginning" of the list
+    ListNode *tail;                     // "end" of the list
+} List;
+
+/* HASH table data structure */
+
+typedef struct HashTableNode {
+    char *url;                          // url previously seen
+    struct HashTableNode *next;         // pointer to next node
+} HashTableNode;
+
+typedef struct HashTable {
+    HashTableNode *table[MAX_HASH_SLOT];     // actual hashtable
+} HashTable;
+
+/*
+ * Somewhere we need to create all our primary variables 
+ * decide: static or dynamic?
+ */
+
+(2) *Prototype Definitions*
+
+/*
+ * List functions 
+ *    add to tail, remove from front, initialize
+ */
+int AppendList(WebPage *);	// append a webpage to the end
+WebPage *PopList ( );		// pop off the next webpage 
+
+/*
+ * Hash table functions
+ * Note: there are a variety of return codes - good? bad?
+ */
+
+/* AddToHashTable - returns 0 if successful, 1 otherwise */
+int AddToHashTable( char *URL );  	// add a URL
+
+/* InHashTable - returns 1 if successful, 0 otherwise */
+int InHashTable (char *URL );  // look for a URL
+
+/* 
+ * GetWebPage - curl page->url, store into page->html
+ * @page: the webpage struct containing the url to curl
+ *
+ * Returns 1 if the curl was successful; otherwise, 0. If the curl succeeded,
+ * then page->html will contain the content retrieved. The WebPage struct should
+ * have been allocated by the caller, but the page->html pointer is expected to
+ * be NULL. If this function is successful, a new, null-terminated character
+ * buffer will be allocated. It is the caller's responsibility to free this
+ * memory.
+ *
+ * Usage example:
+ * WebPage* page = calloc(1, sizeof(WebPage));
+ * page->url = "http://www.example.com";
+ *
+int GetWebPage(WebPage *page);
+
+/*
+ * GetNextURL - returns the next url from html[pos] into result
+ * @html: pointer to the html buffer
+ * @pos: current position in html buffer
+ * @base_url: the base url of the webpage, used to fixup relative links
+ * @result: a pointer to character pointer, used to pass the url back out
+ *
+ * Returns the current position search so far in html; otherwise, returns  0) {
+ * }
+ *
+ */
+
+/* Standard Linux system calls used
+ *
+ * free(char *);
+ * unsigned int sleep(unsigned int seconds);
+ * void free(void *ptr);
+ * void *malloc(size_t size);
+ *
+ */
