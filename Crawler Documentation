@@ -120,11 +120,6 @@ typedef struct HashTable {
     HashTableNode *table[MAX_HASH_SLOT];     // actual hashtable
 } HashTable;
 
-/*
- * Somewhere we need to create all our primary variables 
- * decide: static or dynamic?
- */
-
 (2) *Prototype Definitions*
 
 /*
@@ -136,7 +131,6 @@ WebPage *PopList ( );		// pop off the next webpage
 
 /*
  * Hash table functions
- * Note: there are a variety of return codes - good? bad?
  */
 
 /* AddToHashTable - returns 0 if successful, 1 otherwise */
